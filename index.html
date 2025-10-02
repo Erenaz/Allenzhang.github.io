@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TReE‑FROG GIF/Video Gallery</title>
+  <meta name="description" content="Lightweight gallery to present TReE‑FROG animated results (GIF/MP4/WebM) on GitHub Pages." />
+  <style>
+    :root {
+      --bg: #0b0d10;
+      --card: #12151a;
+      --fg: #e8eef6;
+      --muted: #a9b2c3;
+      --accent: #62a8ff;
+      --radius: 16px;
+    }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: var(--bg);
+      color: var(--fg);
+    }
+    header {
+      position: sticky; top: 0; z-index: 10;
+      backdrop-filter: blur(6px);
+      background: color-mix(in oklab, var(--bg) 80%, transparent);
+      border-bottom: 1px solid #1e232c;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
+    h1 { font-size: clamp(22px, 3vw, 32px); margin: 0 0 4px 0; letter-spacing: 0.2px; }
+    .sub { color: var(--muted); font-size: 14px; }
+
+    .grid {
+      display: grid; gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      padding: 18px 16px 40px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid #232936;
+      border-radius: var(--radius);
+      overflow: clip;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+      transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.3); border-color: #2d384a; }
+
+    .thumb { aspect-ratio: 16/10; width: 100%; display: block; background:#0f1319; }
+    .thumb video, .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .meta { padding: 10px 12px 12px; }
+    .title { font-weight: 600; font-size: 14px; line-height: 1.25; margin: 0 0 6px; }
+    .desc { color: var(--muted); font-size: 12px; margin: 0; }
+
+    .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+    .chip { font-size:11px; color:var(--muted); border:1px solid #2b3342; border-radius:999px; padding:4px 8px; }
+
+    /* Modal */
+    dialog::backdrop { background: rgba(0,0,0,0.6); }
+    dialog { border: 1px solid #273142; background: #0d1117; color: var(--fg); border-radius: 18px; padding: 0; max-width: 92vw; }
+    .modal-head { display:flex; justify-content: space-between; align-items:center; padding: 10px 12px; border-bottom:1px solid #1f2633; }
+    .modal-title { font-weight:600; font-size:14px; }
+    .close { appearance:none; border:1px solid #2b3342; background:#121720; color:var(--fg); border-radius:10px; padding:6px 10px; cursor:pointer; }
+    .modal-body { padding: 10px; }
+    .player { width: min(86vw, 1100px); max-height: 78vh; display:block; margin:0 auto; background:#0f1319; border-radius: 14px; }
+    .player video, .player img { width: 100%; height: 100%; object-fit: contain; display:block; border-radius: 14px; }
+
+    footer { color: var(--muted); font-size: 12px; border-top:1px solid #1e232c; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .notice { background: #0d1421; border: 1px solid #23304a; padding: 10px 12px; border-radius: 12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>TReE‑FROG Gallery</h1>
+      <div class="sub">Quick, mobile‑friendly viewer for animated diagnostics. Scan the QR, browse clips, tap to enlarge.</div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="notice">
+      <strong>Tip:</strong> Prefer MP4/WebM for smooth playback and smaller size. GIFs are used as a fallback only. Files live in <code>assets/videos/</code> (mp4/webm) and <code>assets/gifs/</code>.
+    </div>
+  </div>
+
+  <main class="grid" id="grid"></main>
+
+  <dialog id="viewer">
+    <div class="modal-head">
+      <div class="modal-title" id="viewerTitle">Preview</div>
+      <button class="close" id="closeBtn" aria-label="Close">Close</button>
+    </div>
+    <div class="modal-body">
+      <div class="player" id="player"></div>
+      <div style="padding:10px 2px 14px; color:#a9b2c3; font-size:12px" id="viewerDesc"></div>
+    </div>
+  </dialog>
+
+  <footer>
+    <div class="wrap" style="display:flex;justify-content:space-between;gap:12px;align-items:center;padding:14px 16px;">
+      <div>© <span id="year"></span> TReE‑FROG Team • Built on GitHub Pages</div>
+      <div><a href="#" id="rawLink" rel="noopener">Open source file</a></div>
+    </div>
+  </footer>
+
+  <script>
+    // === 1) List your clips here ===
+    // Add one entry per clip. Only mp4 is strictly required; webm/gif are optional fallbacks.
+    // Place files in assets/videos and assets/gifs, or update the paths below.
+    const items = [
+      {
+        title: "Shot 001 — TReE‑FROG trace",
+        desc: "800 nm, 1 kHz, 35 fs; MPC on",
+        mp4: "assets/videos/shot001.mp4",
+        webm: "assets/videos/shot001.webm",
+        gif: "assets/gifs/shot001.gif",
+        poster: "assets/posters/shot001.jpg"
+      },
+      {
+        title: "Shot 002 — Phase retrieval sweep",
+        desc: "UV bandwidth scan (Δλ) vs gate delay",
+        mp4: "assets/videos/shot002.mp4",
+        webm: "assets/videos/shot002.webm",
+        gif: "assets/gifs/shot002.gif",
+        poster: "assets/posters/shot002.jpg"
+      }
+      // Add more objects…
+    ];
+
+    // === 2) Render gallery ===
+    const grid = document.getElementById('grid');
+    const makeCard = (it, idx) => {
+      const card = document.createElement('article');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="thumb">
+          ${it.mp4 ? `
+            <video preload="metadata" playsinline muted loop poster="${it.poster || ''}">
+              ${it.webm ? `<source src="${it.webm}" type="video/webm">` : ''}
+              <source src="${it.mp4}" type="video/mp4">
+              ${it.gif ? `<img src="${it.gif}" alt="${it.title}" loading="lazy">` : `<div style="width:100%;height:100%;display:grid;place-items:center;color:#8fa1bd">No preview</div>`}
+            </video>`
+          : it.gif ? `<img src="${it.gif}" alt="${it.title}" class="gif" loading="lazy">`
+          : `<div style="width:100%;height:100%;display:grid;place-items:center;color:#8fa1bd">Missing media</div>`}
+        </div>
+        <div class="meta">
+          <h3 class="title">${it.title || 'Untitled clip'}</h3>
+          ${it.desc ? `<p class="desc">${it.desc}</p>` : ''}
+        </div>`;
+      card.addEventListener('click', () => openViewer(it));
+      return card;
+    };
+    items.forEach((it, i) => grid.appendChild(makeCard(it, i)));
+
+    // === 3) Modal viewer ===
+    const dlg = document.getElementById('viewer');
+    const player = document.getElementById('player');
+    const viewerTitle = document.getElementById('viewerTitle');
+    const viewerDesc = document.getElementById('viewerDesc');
+    const rawLink = document.getElementById('rawLink');
+    const openViewer = (it) => {
+      viewerTitle.textContent = it.title || 'Preview';
+      viewerDesc.textContent = it.desc || '';
+      rawLink.href = it.mp4 || it.gif || '#';
+      player.innerHTML = it.mp4 ? `
+        <video controls autoplay playsinline loop preload="metadata" style="max-height:72vh" poster="${it.poster || ''}">
+          ${it.webm ? `<source src="${it.webm}" type="video/webm">` : ''}
+          <source src="${it.mp4}" type="video/mp4">
+          ${it.gif ? `<img src="${it.gif}" alt="${it.title}">` : ''}
+        </video>`
+      : it.gif ? `<img src="${it.gif}" alt="${it.title}">`
+      : `<div style="padding:24px;color:#8fa1bd">No media provided for this item.</div>`;
+      dlg.showModal();
+    };
+    document.getElementById('closeBtn').addEventListener('click', () => dlg.close());
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+
+    // === 4) Autoplay only when visible (saves battery/data) ===
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        const v = e.target.querySelector('video');
+        if (!v) return;
+        if (e.isIntersecting) { v.play().catch(()=>{}); } else { v.pause(); }
+      });
+    }, { threshold: 0.25 });
+    document.querySelectorAll('.card').forEach(c => io.observe(c));
+
+    // Footer year
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
