@@ -25,6 +25,8 @@
     .card:hover{transform:translateY(-2px);transition:transform .12s ease}
     .thumb{aspect-ratio:16/10;width:100%;display:block;background:#0f1319;position:relative}
     .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .zoom{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.45);border:1px solid #2b3342;color:#e8eef6;border-radius:8px;padding:4px 7px;font-size:12px;cursor:pointer}
+    .zoom:hover{background:rgba(0,0,0,.6)}
     .err{position:absolute;inset:0;display:grid;place-items:center;padding:10px;text-align:center;color:#ffbdbd;border:1px dashed #512929;background:#1b0d0d}
     .meta{padding:10px 12px 12px}
     .title{font-weight:600;font-size:14px;margin:0 0 6px}
@@ -61,7 +63,7 @@
   </header>
 
   <div class="notice">
-    <strong>Note:</strong> This project page is optimized for <em>GIFs only</em>. For best load times on mobile, target ≤ 960px width, 10–12 fps, and 3–6&nbsp;MB per clip. Place files in <code>Project/SPAROW/gifs/</code>. Avoid leading slashes (use <code>Project/SPAROW/gifs/foo.gif</code>, not <code>/Project/SPAROW/gifs/foo.gif</code>).
+    <strong>Note:</strong> GIFs should be encoded to <em>play once</em> (no loop). To set that, use <code>gifsicle --no-loopcount --batch Project/SPAROW/gifs/*.gif</code>. Click any GIF to replay from the start. Use the ⤢ icon to open a large preview.
   </div>
 
   <!-- GALLERY -->
@@ -107,7 +109,8 @@
     // ========== 0) GLOBAL LOOP DEFAULT (ms) ==========
     // If your GIFs don't have an infinite loop flag, we'll "restart" them by cache-busting.
     // Set to ~your average GIF duration; individual items can override via restartMs.
-    const DEFAULT_RESTART_MS = 4000;
+    // Default is 0 (no forced restart). Set per item via forceRestart + durationMs if needed.
+const DEFAULT_RESTART_MS = 0;
 
     // ========== 1) LIST YOUR GIFS HERE ==========
     // Use repo-relative paths; do NOT start with '/'. Example below assumes your files are in Project/SPAROW/gifs/.
@@ -126,6 +129,7 @@
       card.innerHTML = `
         <div class="thumb">
           <img src="${it.gif}" alt="${safeAlt}" loading="lazy" />
+          <button class="zoom" type="button" title="Open viewer">⤢</button>
         </div>
         <div class="meta">
           <h3 class="title">${it.title||'Untitled clip'}</h3>
@@ -139,24 +143,36 @@
         box.innerHTML = `GIF failed to load:<br><code class="small">${it.gif}</code><br><small>Check path/case, LFS usage, and that the file exists in the repo.</small>`;
         img.replaceWith(box);
       });
-      // === Auto-restart for non-looping GIFs ===
-      const loopMs = Number(it.restartMs ?? DEFAULT_RESTART_MS);
-      if (loopMs > 0) {
-        const base = it.gif;
-        const restart = () => {
-          const url = base + (base.includes('?') ? '&' : '?') + 't=' + Date.now();
-          img.src = url;
-        };
-        const startTimer = () => {
-          clearInterval(img._loopTimer);
-          img._loopTimer = setInterval(restart, loopMs);
-        };
-        img.addEventListener('load', startTimer);
-        card.addEventListener('mouseenter', () => clearInterval(img._loopTimer));
-        card.addEventListener('mouseleave', startTimer);
-        window.addEventListener('pagehide', () => clearInterval(img._loopTimer));
+      // === Auto-restart for non-looping GIFs (opt-in) ===
+// Only run if the item explicitly sets forceRestart = true.
+if (it.forceRestart) {
+  const loopMs = Number(it.durationMs ?? it.restartMs ?? DEFAULT_RESTART_MS);
+  if (loopMs > 0) {
+    const base = it.gif;
+    const restart = () => {
+      const url = base + (base.includes('?') ? '&' : '?') + 't=' + Date.now();
+      img.src = url;
+    };
+    const startTimer = () => {
+      clearInterval(img._loopTimer);
+      img._loopTimer = setInterval(restart, loopMs);
+    };
+    img.addEventListener('load', startTimer);
+    card.addEventListener('mouseenter', () => clearInterval(img._loopTimer));
+    card.addEventListener('mouseleave', startTimer);
+    window.addEventListener('pagehide', () => clearInterval(img._loopTimer));
+  }
+}
       }
-      card.addEventListener('click', () => openViewer(it));
+      // Clicking the zoom button opens the viewer; clicking the GIF itself replays it
+      const zoomBtn = card.querySelector('.zoom');
+      zoomBtn.addEventListener('click', (e)=>{ e.stopPropagation(); openViewer(it); });
+      const baseSrc = it.gif;
+      const replay = (imgEl)=>{
+        const url = baseSrc + (baseSrc.includes('?')?'&':'?') + 'r=' + Date.now();
+        imgEl.src = url;
+      };
+      img.addEventListener('click', (e)=>{ e.stopPropagation(); replay(img); });
       return card;
     }
     items.forEach(it => grid.appendChild(makeCard(it)));
@@ -178,9 +194,15 @@
         return;
       }
       const safeAlt = (it.title||'SPAROW GIF').replaceAll('"','&quot;');
-      player.innerHTML = `<img id="viewerImg" src="${it.gif}" alt="${safeAlt}" style="width:100%;height:100%;object-fit:contain;border-radius:14px"/>`;
+      player.innerHTML = `<img id="viewerImg" src="${it.gif}" alt="${safeAlt}" style="width:100%;height:100%;object-fit:contain;border-radius:14px"/>`; 
       const vimg = document.getElementById('viewerImg');
-      const loopMs = Number(it.restartMs ?? DEFAULT_RESTART_MS);
+      vimg.addEventListener('click', ()=>{
+        const base = it.gif;
+        const url = base + (base.includes('?') ? '&' : '?') + 'r=' + Date.now();
+        vimg.src = url;
+      });
+      const vimg = document.getElementById('viewerImg');
+      const loopMs = it.forceRestart ? Number(it.durationMs ?? it.restartMs ?? DEFAULT_RESTART_MS) : 0;
       if (loopMs > 0) {
         const base = it.gif;
         const restart = () => {
