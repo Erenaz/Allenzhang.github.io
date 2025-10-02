@@ -3,192 +3,148 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TReE‑FROG GIF/Video Gallery</title>
-  <meta name="description" content="Lightweight gallery to present TReE‑FROG animated results (GIF/MP4/WebM) on GitHub Pages." />
+  <title>SPAROW — GIF Gallery (Project Page)</title>
+  <meta name="description" content="Lightweight GIF gallery for SPAROW results on GitHub Pages. Other sections under construction." />
   <style>
-    :root {
-      --bg: #0b0d10;
-      --card: #12151a;
-      --fg: #e8eef6;
-      --muted: #a9b2c3;
-      --accent: #62a8ff;
-      --radius: 16px;
-    }
-    html, body { height: 100%; }
-    body {
-      margin: 0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      background: var(--bg);
-      color: var(--fg);
-    }
-    header {
-      position: sticky; top: 0; z-index: 10;
-      backdrop-filter: blur(6px);
-      background: color-mix(in oklab, var(--bg) 80%, transparent);
-      border-bottom: 1px solid #1e232c;
-    }
-    .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
-    h1 { font-size: clamp(22px, 3vw, 32px); margin: 0 0 4px 0; letter-spacing: 0.2px; }
-    .sub { color: var(--muted); font-size: 14px; }
+    :root { --bg:#0b0d10; --card:#12151a; --fg:#e8eef6; --muted:#a9b2c3; --accent:#62a8ff; --radius:16px; }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:var(--bg); color:var(--fg)}
+    header{position:sticky;top:0;z-index:20;background:rgba(13,17,23,.7);backdrop-filter:blur(6px);border-bottom:1px solid #1e232c}
+    .wrap{max-width:1100px;margin:0 auto;padding:14px 16px}
+    .brand{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    h1{font-size:clamp(20px,3vw,30px);margin:0}
+    nav a{color:var(--muted);text-decoration:none;margin-left:12px;font-size:14px}
+    nav a.active{color:var(--fg)}
 
-    .grid {
-      display: grid; gap: 14px;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      padding: 18px 16px 40px;
-    }
+    .notice{background:#0d1421;border:1px solid #23304a;padding:10px 12px;border-radius:12px;margin:12px 16px}
 
-    .card {
-      background: var(--card);
-      border: 1px solid #232936;
-      border-radius: var(--radius);
-      overflow: clip;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.25);
-      transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
-    }
-    .card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.3); border-color: #2d384a; }
+    main{max-width:1100px;margin:0 auto;padding:10px 16px 40px}
+    .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+    .card{background:var(--card);border:1px solid #232936;border-radius:var(--radius);overflow:clip;box-shadow:0 3px 10px rgba(0,0,0,.25);cursor:pointer}
+    .card:hover{transform:translateY(-2px);transition:transform .12s ease}
+    .thumb{aspect-ratio:16/10;width:100%;display:block;background:#0f1319}
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .meta{padding:10px 12px 12px}
+    .title{font-weight:600;font-size:14px;margin:0 0 6px}
+    .desc{color:var(--muted);font-size:12px;margin:0}
 
-    .thumb { aspect-ratio: 16/10; width: 100%; display: block; background:#0f1319; }
-    .thumb video, .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    dialog::backdrop{background:rgba(0,0,0,.6)}
+    dialog{border:1px solid #273142;background:#0d1117;color:var(--fg);border-radius:18px;padding:0;max-width:92vw}
+    .modal-head{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid #1f2633}
+    .close{appearance:none;border:1px solid #2b3342;background:#121720;color:var(--fg);border-radius:10px;padding:6px 10px;cursor:pointer}
+    .player{width:min(86vw,1100px);max-height:78vh;margin:0 auto;background:#0f1319;border-radius:14px}
+    .player img{width:100%;height:100%;object-fit:contain;display:block}
 
-    .meta { padding: 10px 12px 12px; }
-    .title { font-weight: 600; font-size: 14px; line-height: 1.25; margin: 0 0 6px; }
-    .desc { color: var(--muted); font-size: 12px; margin: 0; }
-
-    .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
-    .chip { font-size:11px; color:var(--muted); border:1px solid #2b3342; border-radius:999px; padding:4px 8px; }
-
-    /* Modal */
-    dialog::backdrop { background: rgba(0,0,0,0.6); }
-    dialog { border: 1px solid #273142; background: #0d1117; color: var(--fg); border-radius: 18px; padding: 0; max-width: 92vw; }
-    .modal-head { display:flex; justify-content: space-between; align-items:center; padding: 10px 12px; border-bottom:1px solid #1f2633; }
-    .modal-title { font-weight:600; font-size:14px; }
-    .close { appearance:none; border:1px solid #2b3342; background:#121720; color:var(--fg); border-radius:10px; padding:6px 10px; cursor:pointer; }
-    .modal-body { padding: 10px; }
-    .player { width: min(86vw, 1100px); max-height: 78vh; display:block; margin:0 auto; background:#0f1319; border-radius: 14px; }
-    .player video, .player img { width: 100%; height: 100%; object-fit: contain; display:block; border-radius: 14px; }
-
-    footer { color: var(--muted); font-size: 12px; border-top:1px solid #1e232c; }
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-
-    .notice { background: #0d1421; border: 1px solid #23304a; padding: 10px 12px; border-radius: 12px; }
+    .uc{display:grid;place-items:center;height:50vh;color:var(--muted);border:1px dashed #2b3342;border-radius:16px}
+    footer{color:var(--muted);font-size:12px;border-top:1px solid #1e232c}
+    a{color:var(--accent)}
   </style>
 </head>
 <body>
   <header>
-    <div class="wrap">
-      <h1>TReE‑FROG Gallery</h1>
-      <div class="sub">Quick, mobile‑friendly viewer for animated diagnostics. Scan the QR, browse clips, tap to enlarge.</div>
+    <div class="wrap brand">
+      <h1>SPAROW Project Page</h1>
+      <nav>
+        <a href="#gallery" id="nav-gallery" class="active">Gallery</a>
+        <a href="#docs" id="nav-docs">Docs (Under construction)</a>
+      </nav>
     </div>
   </header>
 
-  <div class="wrap">
-    <div class="notice">
-      <strong>Tip:</strong> Prefer MP4/WebM for smooth playback and smaller size. GIFs are used as a fallback only. Files live in <code>assets/videos/</code> (mp4/webm) and <code>assets/gifs/</code>.
-    </div>
+  <div class="notice">
+    <strong>Note:</strong> This project page is optimized for <em>GIFs only</em>. For best load times on mobile, target ≤ 960px width, 10–12 fps, and 3–6&nbsp;MB per clip. Place files in <code>assets/gifs/</code>.
   </div>
 
-  <main class="grid" id="grid"></main>
+  <!-- GALLERY -->
+  <main id="section-gallery">
+    <div id="grid" class="grid"></div>
+  </main>
+
+  <!-- UNDER CONSTRUCTION -->
+  <main id="section-docs" style="display:none">
+    <div class="uc">
+      <div>
+        <h2 style="margin:0 0 8px">Other Sections — Under Construction</h2>
+        <p style="margin:0">Check back soon for methods, calibration notes, and references.</p>
+      </div>
+    </div>
+  </main>
 
   <dialog id="viewer">
     <div class="modal-head">
-      <div class="modal-title" id="viewerTitle">Preview</div>
+      <div id="viewerTitle" style="font-weight:600;font-size:14px">Preview</div>
       <button class="close" id="closeBtn" aria-label="Close">Close</button>
     </div>
-    <div class="modal-body">
-      <div class="player" id="player"></div>
-      <div style="padding:10px 2px 14px; color:#a9b2c3; font-size:12px" id="viewerDesc"></div>
-    </div>
+    <div class="player" id="player"></div>
+    <div style="padding:10px 12px 14px;color:#a9b2c3;font-size:12px" id="viewerDesc"></div>
   </dialog>
 
   <footer>
     <div class="wrap" style="display:flex;justify-content:space-between;gap:12px;align-items:center;padding:14px 16px;">
-      <div>© <span id="year"></span> TReE‑FROG Team • Built on GitHub Pages</div>
-      <div><a href="#" id="rawLink" rel="noopener">Open source file</a></div>
+      <div>© <span id="year"></span> SPAROW Team • GitHub Pages</div>
+      <div><a id="rawLink" href="#" rel="noopener">Open GIF file</a></div>
     </div>
   </footer>
 
   <script>
-    // === 1) List your clips here ===
-    // Add one entry per clip. Only mp4 is strictly required; webm/gif are optional fallbacks.
-    // Place files in assets/videos and assets/gifs, or update the paths below.
+    // ========== 1) LIST YOUR GIFS HERE ==========
+    // Add one entry per GIF (title, desc optional). Paths are relative to index.html.
     const items = [
-      {
-        title: "Shot 001 — TReE‑FROG trace",
-        desc: "800 nm, 1 kHz, 35 fs; MPC on",
-        mp4: "assets/videos/shot001.mp4",
-        webm: "assets/videos/shot001.webm",
-        gif: "assets/gifs/shot001.gif",
-        poster: "assets/posters/shot001.jpg"
-      },
-      {
-        title: "Shot 002 — Phase retrieval sweep",
-        desc: "UV bandwidth scan (Δλ) vs gate delay",
-        mp4: "assets/videos/shot002.mp4",
-        webm: "assets/videos/shot002.webm",
-        gif: "assets/gifs/shot002.gif",
-        poster: "assets/posters/shot002.jpg"
-      }
-      // Add more objects…
+      { title: "Streak Camera Trace", desc: "Description for Streak Camera Trace", gif: "/Project/SPAROW/gifs/Streak_frames.gif" },
+      { title: "SPAROW Trace", desc: "Description for SPAROW Trace", gif: "/Project/SPAROW/gifs/TReE_FROG_traces.gif" }
+      // Add more …
     ];
 
-    // === 2) Render gallery ===
+    // ========== 2) RENDER GRID ==========
     const grid = document.getElementById('grid');
-    const makeCard = (it, idx) => {
+    const makeCard = (it) => {
       const card = document.createElement('article');
       card.className = 'card';
       card.innerHTML = `
         <div class="thumb">
-          ${it.mp4 ? `
-            <video preload="metadata" playsinline muted loop poster="${it.poster || ''}">
-              ${it.webm ? `<source src="${it.webm}" type="video/webm">` : ''}
-              <source src="${it.mp4}" type="video/mp4">
-              ${it.gif ? `<img src="${it.gif}" alt="${it.title}" loading="lazy">` : `<div style="width:100%;height:100%;display:grid;place-items:center;color:#8fa1bd">No preview</div>`}
-            </video>`
-          : it.gif ? `<img src="${it.gif}" alt="${it.title}" class="gif" loading="lazy">`
-          : `<div style="width:100%;height:100%;display:grid;place-items:center;color:#8fa1bd">Missing media</div>`}
+          <img src="${it.gif}" alt="${it.title||'SPAROW GIF'}" loading="lazy" />
         </div>
         <div class="meta">
-          <h3 class="title">${it.title || 'Untitled clip'}</h3>
-          ${it.desc ? `<p class="desc">${it.desc}</p>` : ''}
+          <h3 class="title">${it.title||'Untitled clip'}</h3>
+          ${it.desc?`<p class="desc">${it.desc}</p>`:''}
         </div>`;
       card.addEventListener('click', () => openViewer(it));
       return card;
     };
-    items.forEach((it, i) => grid.appendChild(makeCard(it, i)));
+    items.forEach(it => grid.appendChild(makeCard(it)));
 
-    // === 3) Modal viewer ===
+    // ========== 3) LIGHTBOX VIEWER ==========
     const dlg = document.getElementById('viewer');
     const player = document.getElementById('player');
     const viewerTitle = document.getElementById('viewerTitle');
     const viewerDesc = document.getElementById('viewerDesc');
     const rawLink = document.getElementById('rawLink');
-    const openViewer = (it) => {
+    function openViewer(it){
       viewerTitle.textContent = it.title || 'Preview';
       viewerDesc.textContent = it.desc || '';
-      rawLink.href = it.mp4 || it.gif || '#';
-      player.innerHTML = it.mp4 ? `
-        <video controls autoplay playsinline loop preload="metadata" style="max-height:72vh" poster="${it.poster || ''}">
-          ${it.webm ? `<source src="${it.webm}" type="video/webm">` : ''}
-          <source src="${it.mp4}" type="video/mp4">
-          ${it.gif ? `<img src="${it.gif}" alt="${it.title}">` : ''}
-        </video>`
-      : it.gif ? `<img src="${it.gif}" alt="${it.title}">`
-      : `<div style="padding:24px;color:#8fa1bd">No media provided for this item.</div>`;
+      rawLink.href = it.gif || '#';
+      player.innerHTML = `<img src="${it.gif}" alt="${it.title||'TReE-FROG GIF'}" style="width:100%;height:100%;object-fit:contain;border-radius:14px"/>`;
       dlg.showModal();
-    };
-    document.getElementById('closeBtn').addEventListener('click', () => dlg.close());
-    dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+    }
+    document.getElementById('closeBtn').addEventListener('click', ()=> dlg.close());
+    dlg.addEventListener('click', (e)=>{ if(e.target===dlg) dlg.close(); });
 
-    // === 4) Autoplay only when visible (saves battery/data) ===
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        const v = e.target.querySelector('video');
-        if (!v) return;
-        if (e.isIntersecting) { v.play().catch(()=>{}); } else { v.pause(); }
-      });
-    }, { threshold: 0.25 });
-    document.querySelectorAll('.card').forEach(c => io.observe(c));
+    // ========== 4) SIMPLE NAV ==========
+    const secG = document.getElementById('section-gallery');
+    const secD = document.getElementById('section-docs');
+    const nG = document.getElementById('nav-gallery');
+    const nD = document.getElementById('nav-docs');
+    function route(){
+      const h = location.hash || '#gallery';
+      const showGallery = h.includes('gallery');
+      secG.style.display = showGallery ? '' : 'none';
+      secD.style.display = showGallery ? 'none' : '';
+      nG.classList.toggle('active', showGallery);
+      nD.classList.toggle('active', !showGallery);
+    }
+    addEventListener('hashchange', route);
+    route();
 
     // Footer year
     document.getElementById('year').textContent = new Date().getFullYear();
